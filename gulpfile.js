@@ -6,67 +6,102 @@ var gulp = require('gulp'),
     rename = require("gulp-rename"),
     browserSync = require('browser-sync');
 
-//jade
+var pathDev = 'Source/Development/',
+       pathCom = 'Source/Completed/';
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              JADE
+///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('jade',function() {
-  return gulp.src('Source/Development/Jade/jade.jade')
+  return gulp.src(pathDev+'Jade/jade.jade')
   .pipe(plumber())
   .pipe(rename('index.jade'))
   .pipe(jade({pretty: true}))//pretty - древовидная структура
-  .pipe(gulp.dest('Source/Completed/'))
+  .pipe(gulp.dest(pathCom))
 });
 
-//sass
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              SASS
+///////////////////////////////////////////////////////////////////////////////////////
+//sass - задача для главного файла стилей
 gulp.task('sass',function() {
-  return gulp.src('Source/Development/Sass/sass.sass')
+  return gulp.src(pathDev+'Sass/sass.sass')
   .pipe(plumber())
   .pipe(rename('style.sass'))
   .pipe(sass().on('error', sass.logError))
-  .pipe(gulp.dest('Source/Completed/Stylesheets/'))
+  .pipe(gulp.dest(pathCom+'Stylesheets/'))
 });
 
-//js
+//sass:libs - задача для всех файлов стилей внутри папки Sass кроме главного
+gulp.task('sass:libs',function() {
+  return gulp.src([
+      pathDev+'Sass/*.{sass,scss}',
+      '!'+pathDev+'Sass/sass.sass'
+  ])
+  .pipe(plumber())
+  .pipe(sass().on('error', sass.logError))
+  .pipe(gulp.dest(pathCom+'Stylesheets/'))
+});
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              JAVASCRIPT
+///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('js', function() {
-  return gulp.src('Source/Development/JavaScript/javascript.js')
+  return gulp.src(pathDev+'JavaScript/javascript.js')
   // .pipe(plumber())
   .pipe(concat('javascript.js'))
-  .pipe(gulp.dest('Source/Completed/JavaScript/'))
+  .pipe(gulp.dest(pathCom+'JavaScript/'))
 });
 
-//server
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              COPY
+///////////////////////////////////////////////////////////////////////////////////////
+gulp.task('copy', function() {
+  return gulp.src(pathDev+'{Images,Fonts}/**/*.*')
+  .pipe(gulp.dest(pathCom))
+});
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              SERVER
+///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('server', function () {
   browserSync({
     port: 9000,
     server: {
-      baseDir: 'Source/Completed/'
+      baseDir: pathCom
     }
   });
 });
 
-// copy
-gulp.task('copy', function() {
-  return gulp.src('Source/Development/{Images,Fonts}/**/*.*')
-  .pipe(gulp.dest('Source/Completed/'))
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              WATCHING
+///////////////////////////////////////////////////////////////////////////////////////
+gulp.task('watching', function() {
+    gulp.watch(pathCom+'**/*.{html,css,js}').on('change', browserSync.reload);
+    gulp.watch(pathDev+'**/*.{sass,scss}', ['sass','sass:libs']);
+    gulp.watch(pathDev+'**/*.jade', ['jade']);
+    gulp.watch(pathDev+'**/*.js', ['js']);
 });
 
-//watch
-// gulp.task('watch', function () {
-//   gulp.watch([
-//     'Source/Completed/**/*.html',
-//     'Source/Completed/**/*.css',
-//     'Source/Completed/**/*.js'
-//   ]).on('change', browserSync.reload);
+// gulp.task('watching', function() {
+//     gulp.watch(pathCom+'**/*.{html,css,js}').on('change', browserSync.reload);
+//     gulp.watch(pathDev+'Sass/sass.sass', ['sass']);
+//     gulp.watch([pathDev+'**/*.{sass,scss}', '!'+pathDev+'Sass/sass.sass'], ['sass:libs']);
+//     gulp.watch(pathDev+'**/*.jade', ['jade']);
+//     gulp.watch(pathDev+'**/*.js', ['js']);
 // });
 
-//watching
-gulp.task('watching', function() {
-    gulp.watch(['Source/Completed/**/*.{html,css,js}']).on('change', browserSync.reload);
-    gulp.watch('Source/Development/**/*.sass', ['sass']);
-    gulp.watch('Source/Development/**/*.jade', ['jade']);
-    gulp.watch('Source/Development/**/*.js', ['js']);
-});
 
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              RUN
+///////////////////////////////////////////////////////////////////////////////////////
 // dev
-gulp.task('dev',['sass','jade','js','copy']);
+gulp.task('dev',['sass','sass:libs','jade','js','copy']);
 
 // default
 gulp.task('default', ['server','watching']);
