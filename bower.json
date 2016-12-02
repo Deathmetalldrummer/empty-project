@@ -1,0 +1,10 @@
+{
+  "name": "ragnarok",
+  "description": "",
+  "main": "index.js",
+  "authors": [
+    "Ragnarok <deathmetalldrummer@gmail.com>"
+  ],
+  "license": "ISC",
+  "homepage": "https://github.com/Deathmetalldrummer/empty-project"
+}
