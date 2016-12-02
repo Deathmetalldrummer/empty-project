@@ -21,6 +21,16 @@ gulp.task('jade',function() {
   .pipe(gulp.dest(pathCom))
 });
 
+gulp.task('jade:pages',function() {
+  return gulp.src([
+      pathDev+'Jade/*.jade',
+      '!'+pathDev+'Jade/jade.jade'
+  ])
+  .pipe(plumber())
+  .pipe(jade({pretty: true}))//pretty - древовидная структура
+  .pipe(gulp.dest(pathCom))
+});
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              SASS
@@ -84,7 +94,7 @@ gulp.task('server', function () {
 gulp.task('watching', function() {
     gulp.watch(pathCom+'**/*.{html,css,js}').on('change', browserSync.reload);
     gulp.watch(pathDev+'**/*.{sass,scss}', ['sass','sass:libs']);
-    gulp.watch(pathDev+'**/*.jade', ['jade']);
+    gulp.watch(pathDev+'**/*.jade', ['jade','jade:pages']);
     gulp.watch(pathDev+'**/*.js', ['js']);
 });
 
@@ -101,7 +111,7 @@ gulp.task('watching', function() {
 //                                                              RUN
 ///////////////////////////////////////////////////////////////////////////////////////
 // dev
-gulp.task('dev',['sass','sass:libs','jade','js','copy']);
+gulp.task('dev',['sass','sass:libs','jade','jade:pages','js','copy']);
 
 // def
 gulp.task('def', ['dev','server','watching']);
