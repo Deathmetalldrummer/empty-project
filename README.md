@@ -1,2 +1,2 @@
-# empty-project
+# Archetype
 Прототип проекта
