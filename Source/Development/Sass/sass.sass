@@ -2,22 +2,27 @@
 @import vendors/
 
 // Переменные, миксины и т.д.
-@import utils/
+@import utils/_variables
+@import utils/_mixins
+
 
 //Переопределения стилей библиотек
 @import vendors-extensions/
 
 //Базовае или общие стили
-@import base/
+@import base/_reset
+@import base/_typography
 
 //Разные части сайта
-@import layout/
+@import layout/_header
+@import layout/_section
+@import layout/_footer
 
 //Компоненты или модули
-@import components/
+@import components/_navigation
 
 // Отдельные страницы сайта
-@import pages/
+@import pages/_home
 
 // Темы
 @import themes/theme
