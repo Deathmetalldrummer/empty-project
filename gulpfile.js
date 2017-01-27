@@ -1,13 +1,25 @@
+// Blacklist    https://github.com/gulpjs/plugins/blob/master/src/blackList.json
 var gulp = require('gulp'),
     jade = require('gulp-jade'),
     sass = require('gulp-sass'),
-    concat = require('gulp-concat'),
     plumber = require('gulp-plumber'),
     rename = require("gulp-rename"),
-    browserSync = require('browser-sync');
+    browserSync = require('browser-sync'),
+    autoprefixer = require('gulp-autoprefixer'),
+    mini = require('gulp-clean-css'),
+    uglify = require('gulp-uglify'),
+    del = require('del'),
+    spritesmith = require('gulp.spritesmith'),
+    imagemin = require('gulp-imagemin'),
+    runSequence = require('run-sequence');
 
 var pathDev = 'Source/Development/',
        pathCom = 'Source/Completed/';
+
+var prefix = {
+          browsers: ['last 5 versions'],
+          cascade: false
+      }
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -16,8 +28,8 @@ var pathDev = 'Source/Development/',
 gulp.task('jade',function() {
   return gulp.src(pathDev+'Jade/jade.jade')
   .pipe(plumber())
-  .pipe(rename('index.jade'))
   .pipe(jade({pretty: true}))//pretty - древовидная структура
+  .pipe(rename({basename: 'index'}))
   .pipe(gulp.dest(pathCom))
 });
 
@@ -31,6 +43,10 @@ gulp.task('jade:pages',function() {
   .pipe(gulp.dest(pathCom))
 });
 
+gulp.task('Jade', function(){
+    runSequence('jade','jade:pages');
+});
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              SASS
@@ -39,8 +55,9 @@ gulp.task('jade:pages',function() {
 gulp.task('sass',function() {
   return gulp.src(pathDev+'Sass/sass.sass')
   .pipe(plumber())
-  .pipe(rename('style.sass'))
   .pipe(sass().on('error', sass.logError))
+  .pipe(autoprefixer(prefix))
+  .pipe(rename({basename: 'style'}))
   .pipe(gulp.dest(pathCom+'Stylesheets/'))
 });
 
@@ -52,17 +69,64 @@ gulp.task('sass:libs',function() {
   ])
   .pipe(plumber())
   .pipe(sass().on('error', sass.logError))
+  .pipe(autoprefixer(prefix))
   .pipe(gulp.dest(pathCom+'Stylesheets/'))
 });
+
+gulp.task('css:min',function() {
+    return gulp.src([pathCom+'Stylesheets/*.css', '!'+pathCom+'Stylesheets/*.min.css'])
+    .pipe(mini())
+    .pipe(rename({suffix: '.min'}))
+    .pipe(gulp.dest(pathCom+'Stylesheets/'))
+});
+
+gulp.task('Sass', function(){
+    runSequence('sass','sass:libs','css:min');
+});
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              JAVASCRIPT
 ///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('js', function() {
   return gulp.src(pathDev+'JavaScript/javascript.js')
-  // .pipe(plumber())
-  .pipe(concat('javascript.js'))
   .pipe(gulp.dest(pathCom+'JavaScript/'))
+});
+
+gulp.task('js:min',function() {
+  return gulp.src([pathCom+'JavaScript/*.js', '!'+pathCom+'JavaScript/*.min.js'])
+  .pipe(uglify())
+  .pipe(rename({suffix: '.min'}))
+  .pipe(gulp.dest(pathCom+'JavaScript/'))
+});
+
+gulp.task('JavaScript', function(){
+    runSequence('js','js:min');
+});
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              SPRITE
+///////////////////////////////////////////////////////////////////////////////////////
+gulp.task('sprite',function() {
+    return gulp.src(pathDev+'Images/sprite/png/**/*.{png,jpg}')
+    .pipe(spritesmith({
+        imgName: 'Images/sprite.png',
+       cssName: 'Sass/base/_sprite.sass',
+       algorithm: 'binary-tree',
+       padding: 50
+    }))
+    .pipe(gulp.dest(pathDev))
+});
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              IMAGE MIN
+///////////////////////////////////////////////////////////////////////////////////////
+gulp.task('imgMin', function() {
+  return gulp.src([pathDev+'Images/**/*.{png,jpg}', '!'+pathDev+'Images/sprite/**/*.*'])
+  .pipe(imagemin())
+  .pipe(gulp.dest(pathCom+'Images/'))
 });
 
 
@@ -70,8 +134,16 @@ gulp.task('js', function() {
 //                                                              COPY
 ///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('copy', function() {
-  return gulp.src(pathDev+'{Images,Fonts}/**/*.*')
+  return gulp.src([pathDev+'{Images,Fonts}/**/*.*', '!'+pathDev+'Images/sprite/**/*.*'])
   .pipe(gulp.dest(pathCom))
+});
+
+
+///////////////////////////////////////////////////////////////////////////////////////
+//                                                              CLEAN
+///////////////////////////////////////////////////////////////////////////////////////
+gulp.task('clean', function() {
+    del(pathCom);
 });
 
 
@@ -93,9 +165,9 @@ gulp.task('server', function () {
 ///////////////////////////////////////////////////////////////////////////////////////
 gulp.task('watching', function() {
     gulp.watch(pathCom+'**/*.{html,css,js}').on('change', browserSync.reload);
-    gulp.watch(pathDev+'**/*.{sass,scss}', ['sass','sass:libs']);
-    gulp.watch(pathDev+'**/*.jade', ['jade','jade:pages']);
-    gulp.watch(pathDev+'**/*.js', ['js']);
+    gulp.watch(pathDev+'**/*.{sass,scss}', ['Sass']);
+    gulp.watch(pathDev+'**/*.jade', ['Jade']);
+    gulp.watch(pathDev+'**/*.js', ['JavaScript']);
 });
 
 // gulp.task('watching', function() {
@@ -111,7 +183,7 @@ gulp.task('watching', function() {
 //                                                              RUN
 ///////////////////////////////////////////////////////////////////////////////////////
 // dev
-gulp.task('dev',['sass','sass:libs','jade','jade:pages','js','copy']);
+gulp.task('dev',['Jade','Sass','JavaScript','copy']);
 
 // def
 gulp.task('def', ['dev','server','watching']);
