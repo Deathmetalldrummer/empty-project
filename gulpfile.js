@@ -169,8 +169,5 @@ gulp.task('watching', function() {
 // dev
 gulp.task('dev',['Jade','Sass','JavaScript','copy']);
 
-// def
-gulp.task('def', ['dev','server','watching']);
-
 // default
-gulp.task('default', ['server','watching']);
+gulp.task('default', ['dev','server','watching']);
