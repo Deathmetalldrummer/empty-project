@@ -9,7 +9,6 @@ var gulp = require('gulp'),
     mini = require('gulp-clean-css'),
     uglify = require('gulp-uglify'),
     del = require('del'),
-    spritesmith = require('gulp.spritesmith'),
     imagemin = require('gulp-imagemin'),
     runSequence = require('run-sequence');
 
@@ -102,21 +101,6 @@ gulp.task('js:min',function() {
 
 gulp.task('JavaScript', function(){
     runSequence('js','js:min');
-});
-
-
-///////////////////////////////////////////////////////////////////////////////////////
-//                                                              SPRITE
-///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('sprite',function() {
-    return gulp.src(pathDev+'Images/sprite/png/**/*.{png,jpg}')
-    .pipe(spritesmith({
-        imgName: 'Images/sprite.png',
-       cssName: 'Sass/base/_sprite.sass',
-       algorithm: 'binary-tree',
-       padding: 50
-    }))
-    .pipe(gulp.dest(pathDev))
 });
 
 
