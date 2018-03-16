@@ -1,0 +1,87 @@
+//container
+%container_left
+	font-size: 0
+	margin-left: 0
+	margin-right: auto
+%container_right
+	font-size: 0
+	margin-right: 0
+	margin-left: auto
+%container_center
+	font-size: 0
+	margin-left: auto
+	margin-right: auto
+%container
+	@extend %container_center
+//column
+%col_middle
+	font-size: 16px
+	font-size: 1rem
+	display: inline-block
+	vertical-align: middle
+%col_top
+	font-size: 16px
+	font-size: 1rem
+	display: inline-block
+	vertical-align: top
+%col_bottom
+	font-size: 16px
+	font-size: 1rem
+	display: inline-block
+	vertical-align: bottom
+%grid
+	@extend %col_top
+
+
+//*====MEDIA QUERIES====*/
+=media_after($from)
+	@media screen and (min-width: $from)
+		@content
+
+=media_before($to)
+	@media screen and (max-width: $to)
+		@content
+
+=media_respond($from,$to)
+	@media screen and (min-width: $from) and (max-width: $to)
+		@content
+
+=media($media)
+	@if $media
+		@if length($media) == 2
+			@if nth($media, 1) == false
+				+media_before(nth($media, 2))
+				 	@content
+
+			@else
+				+media_respond(nth($media, 1),nth($media, 2))
+					@content
+
+		@if length($media) == 1
+			+media_after($media)
+				@content
+
+	@else
+		@content
+
+
+//*====GRID SETTING====*/
+$grid_setting: (gutter: 15px,columns: 12)
+
+
+//*====GRID SYSTEM====*/
+=container($container_width: 100%, $media: false, $container_align: center)
+	@extend %container_#{$container_align}
+	+media($media)
+		width: $container_width
+
+=grid($grid_width: false, $media: false, $grid_vertical: top, $map_grid: $grid_setting, $padding: true)
+	@if $grid_width == false
+		$grid_width: map-get($map_grid, columns)
+	$g_width: (100% / map-get($map_grid, columns)) * $grid_width
+	@extend %col_#{$grid_vertical}
+	+media($media)
+		width: $g_width
+		@if $padding
+			padding-left: map-get($map_grid, gutter)
+			padding-right: map-get($map_grid, gutter)
