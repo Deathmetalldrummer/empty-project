@@ -69,6 +69,7 @@ gulp.task('Pug', function() {
 });
 
 
+
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              SASS
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -93,6 +94,7 @@ gulp.task('css:min', function() {
 gulp.task('Sass', function() {
 	runSequence('sass', 'css:min');
 });
+
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
@@ -127,13 +129,16 @@ gulp.task('JavaScript', function() {
 gulp.task('copy:font', function() {
 	return gulp.src(devel + '**/*.{woff,woff2,ttf}')
 	.on('data',function(file){
-			file.path = file.path.replace('_module\\','').replace('_font','fonts');
+		replacePath(file,'_fonts/','font/');
 	})
 	.pipe(gulp.dest(build))
 });
 
 gulp.task('copy:img', function() {
-	return gulp.src(['!**/_*/**','!**/_*',devel + '**/*.{png,jpg,svg}'])
+	return gulp.src([devel + '**/_pictures/**/*.{png,jpg,svg}'])
+	.on('data', function(file) {
+		replacePath(file,'_pictures/','pictures/');
+	})
 	.pipe(gulp.dest(build))
 });
 
@@ -145,6 +150,14 @@ gulp.task('copy:other', function() {
 gulp.task('copy', function() {
 	runSequence('copy:font', 'copy:img', 'copy:other');
 });
+
+function replacePath(file,str,strTo) {
+	var filePath = file.path.replace(/\\/g,'/');
+	var picIndex = filePath.indexOf(str);
+	var develIndex = filePath.indexOf(devel);
+	var fromTo = filePath.slice(develIndex+devel.length,picIndex+str.length);
+	file.path = filePath.replace(fromTo,strTo);
+}
 
 
 
