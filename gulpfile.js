@@ -23,7 +23,7 @@ var prefix = {
 	cascade: false
 }
 
-var other_files_copy = 'json';
+var other_files_copy = '{json,jpeg,jpg,png,svg}';
 
 function includeJS(file) {
 	var slash_path = file.path.replace(/\\/g, '/');
