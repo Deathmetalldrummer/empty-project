@@ -211,6 +211,9 @@ gulp.task('watching', function() {
 	gulp.watch(devel + '**/*.{sass,scss}', ['Sass']).on('change', browserSync.reload);
 	gulp.watch(devel + '**/*.{pug,jade}', ['Pug']).on('change', browserSync.reload);
 	gulp.watch(devel + '**/*.js', ['JavaScript']).on('change', browserSync.reload);
+	gulp.watch(devel + '**/*.{woff,woff2,ttf}', ['copy:font']).on('change', browserSync.reload);
+	gulp.watch(devel + '**/*.{png,jpg,svg}', ['copy:img']).on('change', browserSync.reload);
+	gulp.watch(devel + '**/*.' + other_files_copy, ['copy:other']).on('change', browserSync.reload);
 	// gulp.watch(build + '**/*.{html,css,js}').on('change', browserSync.reload);
 });
 
