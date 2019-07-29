@@ -1,0 +1,58 @@
+=_mr($point)
+	@media(max-width: $point)
+		@content
+
+=mr_($point)
+	@media(min-width: $point)
+		@content
+
+
+/// Remove the unit of a length
+/// @param {Number} $number - Number to remove unit from
+/// @return {Number} - Unitless number
+
+@function strip-unit($number)
+	@if type-of($number) == 'number' and not unitless($number)
+		@return $number / ($number * 0 + 1)
+	@return $number
+
+
+///		.fluid-font-size {
+///			font-size: calc( (100vw - 480px)/(1280 - 480) * (24 - 16) + 16px);
+///			font-size: calcFluidFontSize(16,24,480,1280);
+///		}
+@function calcFluidFontSize($f-min, $f-max, $w-min, $w-max, $units: px)
+	@if not $f-max
+		$f-max: $w-max / $w-min * $f-min
+
+	$f-min: strip-unit($f-min)
+	$f-max: strip-unit($f-max)
+	$w-min: strip-unit($w-min)
+	$w-max: strip-unit($w-max)
+
+	$k: ($f-max - $f-min)/($w-max - $w-min)
+	$b: $f-min - $k * $w-min
+
+	$b: $b + $units
+
+	@return calc( #{$k} * 100vw + #{$b} )
+
+
+
+=mrfs($w-min,$f-min,$w-max,$f-max: false,$step: false)
+	@if $w-min <= $w-max
+		$w-diff: $w-max - $w-min /*4000 - 1000 = 3000*/
+		$w-div: $w-max / $w-min /*4000 / 1000 = 4*/
+		@if not $f-max
+			$f-max: $f-min * $w-div
+		@if not $step
+			$step: $w-diff / $f-min /*3000 / 16 = 187.5*/
+		$f-div: $f-max / $f-min /*90 / 16 = 5.625*/
+		@debug $step
+		$step_count: $w-diff / $step
+		@for $i from 1 through $step_count
+			$coef: (((($f-div - 1) / $step_count) * $i) + 1)
+			$coefRound: (round($coef * 1000) / 1000)
+			$mediaWidth: ($w-min + ($i * $step))
+			@media(min-width: $mediaWidth + px)
+				font-size: $coefRound + em
