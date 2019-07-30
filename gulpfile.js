@@ -1,22 +1,20 @@
-// Blacklist    https://github.com/gulpjs/plugins/blob/master/src/blackList.json
-var gulp = require('gulp'),
-	jade = require('gulp-jade'),
-	pug = require('gulp-pug'),
-	sass = require('gulp-sass'),
-	concat = require('gulp-concat'),
-	plumber = require('gulp-plumber'),
-	rename = require("gulp-rename"),
-	browserSync = require('browser-sync').create(),
-	autoprefixer = require('gulp-autoprefixer'),
-	mini = require('gulp-clean-css'),
-	uglify = require('gulp-uglify'),
-	del = require('del'),
-	runSequence = require('run-sequence'),
-	fs = require("fs"),
-	path = require("path");
+const { series, parallel, task, src, dest, watch } = require('gulp');
+const jade_ = require('gulp-jade'),
+			pug_ = require('gulp-pug'),
+			sass_ = require('gulp-sass'),
+			concat_ = require('gulp-concat'),
+			plumber_ = require('gulp-plumber'),
+			rename_ = require("gulp-rename"),
+			browserSync_ = require('browser-sync').create(),
+			autoprefixer_ = require('gulp-autoprefixer'),
+			mini_ = require('gulp-clean-css'),
+			uglify_ = require('gulp-uglify'),
+			del_ = require('del'),
+			fs_ = require("fs"),
+			path_ = require("path");
 
 var devel = 'source/devel/',
-	build = 'source/build/';
+		build = 'source/build/';
 
 var prefix = {
 	browsers: ['last 5 versions'],
@@ -70,106 +68,89 @@ function find_path(string) {
 function absolute_file(some_path) {
 	var str_from = '//#include("';
 	var parent_folder = some_path.replace(some_path.slice(some_path.lastIndexOf('/') + 1, some_path.length), '').replace(devel, '');
-	var file_content = fs.readFileSync(some_path, 'utf8');
+	var file_content = fs_.readFileSync(some_path, 'utf8');
 	file_content = file_content.replace(/\/\/#include\("/g, str_from + devel + parent_folder);
 	return file_content;
 }
 
 
-
-
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              JADE
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('Pug', function() {
-	return gulp.src(['!**/_*/**','!**/_*',devel + '**/*.{pug,jade}'])
-		.pipe(plumber())
-		.pipe(pug({pretty: true}))
-		.pipe(gulp.dest(build))
-});
-
+function pug() {
+	return src([devel + '**/*.{pug,jade}', '!**/_*/**', '!**/_*'])
+		.pipe(plumber_())
+		.pipe(pug_({pretty: true}))
+		.pipe(dest(build))
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              SASS
 ///////////////////////////////////////////////////////////////////////////////////////
 //sass - задача для главного файла стилей
-gulp.task('sass', function() {
-	return gulp.src(['!**/_*/**','!**/_*',devel + '**/*.{sass,scss}'])
-		.pipe(plumber())
-		.pipe(sass().on('error', sass.logError))
-		.pipe(autoprefixer(prefix))
-		.pipe(gulp.dest(build))
-});
+function sass() {
+	return src([devel + '**/*.{sass,scss}', '!**/_*/**', '!**/_*'])
+		.pipe(plumber_())
+		.pipe(sass_().on('error', sass_.logError))
+		// .pipe(autoprefixer_(prefix))
+		.pipe(dest(build))
+}
 
-gulp.task('css:min', function() {
-	return gulp.src(['!' + build + '**/*.min.css', build + '**/*.css'])
-		.pipe(mini())
-		.pipe(rename({
+function css_min() {
+	return src([build + '**/*.css', '!' + build + '**/*.min.css'])
+		.pipe(mini_())
+		.pipe(rename_({
 			suffix: '.min'
 		}))
-		.pipe(gulp.dest(build))
-});
-
-gulp.task('Sass', function() {
-	runSequence('sass', 'css:min');
-});
-
+		.pipe(dest(build))
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              JAVASCRIPT
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('js', function() {
-	return gulp.src(['!**/_*/**','!**/_*',devel + '**/*.js'])
-		.pipe(plumber())
+function js() {
+	return src([devel + '**/*.js', '!**/_*/**', '!**/_*'])
+		.pipe(plumber_())
 		.on('data',function(file){includeJS(file)})
-		.pipe(gulp.dest(build))
-});
+		.pipe(dest(build))
+}
 
-gulp.task('js:min', function() {
-	return gulp.src(['!' + build + '**/*.min.js', build + '**/*.js'])
-		.pipe(plumber())
-		.pipe(uglify())
-		.pipe(rename({
+function js_min() {
+	return src(['!' + build + '**/*.min.js', build + '**/*.js'])
+		.pipe(plumber_())
+		.pipe(uglify_())
+		.pipe(rename_({
 			suffix: '.min'
 		}))
-		.pipe(gulp.dest(build))
-});
-
-gulp.task('JavaScript', function() {
-	runSequence('js', 'js:min');
-});
-
+		.pipe(dest(build))
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              COPY
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('copy:font', function() {
-	return gulp.src(devel + '**/*.{woff,woff2,ttf}')
-	.on('data',function(file){
-		replacePath(file,'_fonts/','font/');
-	})
-	.pipe(gulp.dest(build))
-});
+function copy_font() {
+	return src(devel + '**/*.{woff,woff2,ttf}')
+		.on('data',function(file){
+			replacePath(file,'_fonts/','fonts/');
+		})
+		.pipe(dest(build))
+}
 
-gulp.task('copy:img', function() {
-	return gulp.src([devel + '**/_pictures/**/*.{png,jpg,svg}'])
-	.on('data', function(file) {
-		replacePath(file,'_pictures/','pictures/');
-	})
-	.pipe(gulp.dest(build))
-});
+function copy_img() {
+	return src(devel + '**/_pictures/**/*.{png,jpg,svg}')
+		.on('data', function(file) {
+			replacePath(file,'_pictures/','pictures/');
+		})
+		.pipe(dest(build))
+}
 
-gulp.task('copy:other', function() {
-	return gulp.src(['!**/_*/**','!**/_*',devel + '**/*.' + other_files_copy])
-	.pipe(gulp.dest(build))
-});
-
-gulp.task('copy', function() {
-	runSequence('copy:font', 'copy:img', 'copy:other');
-});
+function copy_other() {
+	return src([devel + '**/*.' + other_files_copy, '!**/_*/**', '!**/_*'])
+		.pipe(dest(build))
+}
 
 function replacePath(file,str,strTo) {
 	var filePath = file.path.replace(/\\/g,'/');
@@ -180,50 +161,52 @@ function replacePath(file,str,strTo) {
 }
 
 
-
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              CLEAN
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('clean', function() {
-	del(build);
-});
-
+async function clean() {
+	del_(build);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              SERVER
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('server', function() {
-	browserSync.init({
+function server() {
+	browserSync_.init({
 		port: 9000,
 		server: {
 			baseDir: './'
 		}
 	});
-});
+}
 
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              WATCHING
 ///////////////////////////////////////////////////////////////////////////////////////
-gulp.task('watching', function() {
-	gulp.watch(devel + '**/*.{sass,scss}', ['Sass']).on('change', browserSync.reload);
-	gulp.watch(devel + '**/*.{pug,jade}', ['Pug']).on('change', browserSync.reload);
-	gulp.watch(devel + '**/*.js', ['JavaScript']).on('change', browserSync.reload);
-	gulp.watch(devel + '**/*.{woff,woff2,ttf}', ['copy:font']).on('change', browserSync.reload);
-	gulp.watch(devel + '**/*.{png,jpg,svg}', ['copy:img']).on('change', browserSync.reload);
-	gulp.watch(devel + '**/*.' + other_files_copy, ['copy:other']).on('change', browserSync.reload);
-	// gulp.watch(build + '**/*.{html,css,js}').on('change', browserSync.reload);
-});
-
+async function watching() {
+	watch(devel + '**/*.{pug,jade}', _pug).on('change', browserSync_.reload);
+	watch(devel + '**/*.{sass,scss}', _sass).on('change', browserSync_.reload);
+	watch(devel + '**/*.js', _js).on('change', browserSync_.reload);
+	watch(devel + '**/*.{woff,woff2,ttf}', copy_font).on('change', browserSync_.reload);
+	watch(devel + '**/*.{png,jpg,svg}', copy_img).on('change', browserSync_.reload);
+	watch(devel + '**/*.' + other_files_copy, copy_other).on('change', browserSync_.reload);
+	// watch(build + '**/*.{html,css,js}').on('change', browserSync.reload);
+}
 
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              RUN
 ///////////////////////////////////////////////////////////////////////////////////////
-// dev
-gulp.task('dev', ['Pug', 'Sass', 'JavaScript', 'copy']);
 
-// default
-gulp.task('default', ['dev', 'server', 'watching']);
+const _pug = exports.Pug = pug;
+const _sass = exports.Sass = series(sass, css_min);
+const _js = exports.JavaScript = series(js, js_min);
+const _copy = exports.Copy = parallel(copy_font, copy_img, copy_other);
+const _clean = exports.clean = clean;
+
+const dev = series(_pug, _sass, _js, _copy);
+
+exports.default = series(dev, server, watching);
