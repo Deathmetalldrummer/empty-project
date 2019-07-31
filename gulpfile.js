@@ -1,27 +1,71 @@
-const { series, parallel, task, src, dest, watch } = require('gulp');
+const { series, parallel, task, src, dest, watch, gulp } = require('gulp');
 const jade_ = require('gulp-jade'),
-			pug_ = require('gulp-pug'),
-			sass_ = require('gulp-sass'),
-			concat_ = require('gulp-concat'),
-			plumber_ = require('gulp-plumber'),
-			rename_ = require("gulp-rename"),
-			browserSync_ = require('browser-sync').create(),
-			autoprefixer_ = require('gulp-autoprefixer'),
-			mini_ = require('gulp-clean-css'),
-			uglify_ = require('gulp-uglify'),
-			del_ = require('del'),
-			fs_ = require("fs"),
-			path_ = require("path");
+		pug_ = require('gulp-pug'),
+		sass_ = require('gulp-sass'),
+		concat_ = require('gulp-concat'),
+		plumber_ = require('gulp-plumber'),
+		rename_ = require("gulp-rename"),
+		browserSync_ = require('browser-sync').create(),
+		autoprefixer_ = require('gulp-autoprefixer'),
+		mini_ = require('gulp-clean-css'),
+		uglify_ = require('gulp-uglify'),
+		del_ = require('del'),
+		fs_ = require("fs"),
+		path_ = require("path");
 
 var devel = 'source/devel/',
-		build = 'source/build/';
+	build = 'source/build/';
+
+const paths = {
+	pug: {
+		src: [devel + '**/*.{pug,jade}', '!**/_*/**', '!**/_*'],
+		dest: build
+	},
+	sass: {
+		src: [devel + '**/*.{sass,scss}', '!**/_*/**', '!**/_*'],
+		dest: build,
+		min: {
+			src: [build + '**/*.css', '!' + build + '**/*.min.css'],
+			dest: build
+		},
+	},
+	js: {
+		src: [devel + '**/*.js', '!**/_*/**', '!**/_*'],
+		dest: build,
+		min: {
+			src: [build + '**/*.js', '!' + build + '**/*.min.js'],
+			dest: build
+		},
+	},
+	img: {
+		src: devel + '**/_pictures/**/*.{png,jpg,svg}',
+		dest: build
+	},
+	font: {
+		src: devel + '**/*.{woff,woff2,ttf}',
+		dest: build
+	},
+	other: {
+		src: [devel + '**/*.{json}', '!**/_*/**', '!**/_*'],
+		dest: build
+	},
+	watch: {
+		pug: devel + '**/*.{pug,jade}',
+		sass: devel + '**/*.{sass,scss}',
+		js: devel + '**/*.js',
+		font: devel + '**/*.{woff,woff2,ttf}',
+		img: devel + '**/*.{png,jpg,svg}',
+		other: devel + '**/*.{json}',
+		build: build + '**/*.{html,css,js}'
+	}
+
+};
 
 var prefix = {
-	browsers: ['last 5 versions'],
+	overrideBrowserslist: ['last 5 versions'],
 	cascade: false
 }
 
-var other_files_copy = '{json,jpeg,jpg,png,svg}';
 
 function includeJS(file) {
 	var slash_path = file.path.replace(/\\/g, '/');
@@ -78,10 +122,10 @@ function absolute_file(some_path) {
 //                                                              JADE
 ///////////////////////////////////////////////////////////////////////////////////////
 function pug() {
-	return src([devel + '**/*.{pug,jade}', '!**/_*/**', '!**/_*'])
+	return src(paths.pug.src)
 		.pipe(plumber_())
 		.pipe(pug_({pretty: true}))
-		.pipe(dest(build))
+		.pipe(dest(paths.pug.dest))
 }
 
 
@@ -90,20 +134,20 @@ function pug() {
 ///////////////////////////////////////////////////////////////////////////////////////
 //sass - задача для главного файла стилей
 function sass() {
-	return src([devel + '**/*.{sass,scss}', '!**/_*/**', '!**/_*'])
+	return src(paths.sass.src)
 		.pipe(plumber_())
 		.pipe(sass_().on('error', sass_.logError))
-		// .pipe(autoprefixer_(prefix))
-		.pipe(dest(build))
+		.pipe(autoprefixer_(prefix))
+		.pipe(dest(paths.sass.dest))
 }
 
 function css_min() {
-	return src([build + '**/*.css', '!' + build + '**/*.min.css'])
+	return src(paths.sass.min.src)
 		.pipe(mini_())
 		.pipe(rename_({
 			suffix: '.min'
 		}))
-		.pipe(dest(build))
+		.pipe(dest(paths.sass.min.dest))
 }
 
 
@@ -111,20 +155,20 @@ function css_min() {
 //                                                              JAVASCRIPT
 ///////////////////////////////////////////////////////////////////////////////////////
 function js() {
-	return src([devel + '**/*.js', '!**/_*/**', '!**/_*'])
+	return src(paths.js.src)
 		.pipe(plumber_())
 		.on('data',function(file){includeJS(file)})
-		.pipe(dest(build))
+		.pipe(dest(paths.js.dest))
 }
 
 function js_min() {
-	return src([build + '**/*.js', '!' + build + '**/*.min.js'])
+	return src(paths.js.min.src)
 		.pipe(plumber_())
 		.pipe(uglify_())
 		.pipe(rename_({
 			suffix: '.min'
 		}))
-		.pipe(dest(build))
+		.pipe(dest(paths.js.min.dest))
 }
 
 
@@ -132,24 +176,24 @@ function js_min() {
 //                                                              COPY
 ///////////////////////////////////////////////////////////////////////////////////////
 function copy_font() {
-	return src(devel + '**/*.{woff,woff2,ttf}')
+	return src(paths.font.src)
 		.on('data',function(file){
 			replacePath(file,'_fonts/','fonts/');
 		})
-		.pipe(dest(build))
+		.pipe(dest(paths.font.dest))
 }
 
 function copy_img() {
-	return src(devel + '**/_pictures/**/*.{png,jpg,svg}')
+	return src(paths.img.src)
 		.on('data', function(file) {
 			replacePath(file,'_pictures/','pictures/');
 		})
-		.pipe(dest(build))
+		.pipe(dest(paths.img.dest))
 }
 
 function copy_other() {
-	return src([devel + '**/*.' + other_files_copy, '!**/_*/**', '!**/_*'])
-		.pipe(dest(build))
+	return src(paths.other.src)
+		.pipe(dest(paths.other.dest))
 }
 
 function replacePath(file,str,strTo) {
@@ -186,14 +230,14 @@ function server() {
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              WATCHING
 ///////////////////////////////////////////////////////////////////////////////////////
-async function watching() {
-	watch(devel + '**/*.{pug,jade}', _pug).on('change', browserSync_.reload);
-	watch(devel + '**/*.{sass,scss}', _sass).on('change', browserSync_.reload);
-	watch(devel + '**/*.js', _js).on('change', browserSync_.reload);
-	watch(devel + '**/*.{woff,woff2,ttf}', copy_font).on('change', browserSync_.reload);
-	watch(devel + '**/*.{png,jpg,svg}', copy_img).on('change', browserSync_.reload);
-	watch(devel + '**/*.' + other_files_copy, copy_other).on('change', browserSync_.reload);
-	// watch(build + '**/*.{html,css,js}').on('change', browserSync.reload);
+function watching() {
+	watch(paths.watch.pug, _pug);
+	watch(paths.watch.sass, _sass);
+	watch(paths.watch.js, _js);
+	watch(paths.watch.font, copy_font);
+	watch(paths.watch.img, copy_img);
+	watch(paths.watch.other, copy_other);
+	watch(paths.watch.build).on('change', browserSync_.reload);
 }
 
 
@@ -201,12 +245,12 @@ async function watching() {
 //                                                              RUN
 ///////////////////////////////////////////////////////////////////////////////////////
 
-const _pug = exports.Pug = pug;
-const _sass = exports.Sass = series(sass, css_min);
-const _js = exports.JavaScript = series(js, js_min);
-const _copy = exports.Copy = parallel(copy_font, copy_img, copy_other);
+const _pug = exports.pug = pug;
+const _sass = exports.sass = series(sass, css_min);
+const _js = exports.js = series(js, js_min);
+const _copy = exports.copy = parallel(copy_font, copy_img, copy_other);
 const _clean = exports.clean = clean;
 
 const dev = series(_pug, _sass, _js, _copy);
 
-exports.default = series(dev, server, watching);
+exports.default = series(dev, parallel(watching, server));
