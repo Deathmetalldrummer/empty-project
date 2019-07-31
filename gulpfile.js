@@ -118,7 +118,7 @@ function js() {
 }
 
 function js_min() {
-	return src(['!' + build + '**/*.min.js', build + '**/*.js'])
+	return src([build + '**/*.js', '!' + build + '**/*.min.js'])
 		.pipe(plumber_())
 		.pipe(uglify_())
 		.pipe(rename_({
