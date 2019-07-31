@@ -13,8 +13,8 @@ const jade_ = require('gulp-jade'),
 		fs_ = require("fs"),
 		path_ = require("path");
 
-var devel = 'source/devel/',
-	build = 'source/build/';
+const devel = 'source/devel/',
+		build = 'source/build/';
 
 const paths = {
 	pug: {
@@ -61,7 +61,7 @@ const paths = {
 
 };
 
-var prefix = {
+const prefix = {
 	overrideBrowserslist: ['last 5 versions'],
 	cascade: false
 }
