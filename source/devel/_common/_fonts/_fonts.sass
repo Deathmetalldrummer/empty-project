@@ -1,7 +1,7 @@
 //*====FONT====*/
-=font($name, $path: './fonts/', $weight:normal,$style: normal)
+=font($name, $path, $weight:normal,$style: normal)
 	@font-face
 		font-family: ''+$name
 		font-weight: $weight
 		font-style: $style
-		src: url($path+$name+'.woff2') format('woff2'),url($path+$name+'.woff') format('woff')
+		src: url($path + '.woff2') format('woff2'),url($path + '.woff') format('woff')

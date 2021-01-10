@@ -6,6 +6,10 @@
 	@media(min-width: $point)
 		@content
 
+=_mr_($point1, $point2)
+	@media(min-width: $point1) and (max-width: $point2)
+		@content
+
 
 /// Remove the unit of a length
 /// @param {Number} $number - Number to remove unit from
@@ -64,3 +68,11 @@
 
 			@media(min-width: floor($media_width) + px)
 				font-size: $coef_round + em
+
+
+@function em($px, $fontSize: 16px)
+	@if (unitless($px))
+		$px: $px * 1px
+	@if (unitless($fontSize))
+		$fontSize: $fontSize * 1px
+	@return $px / $fontSize * 1em
