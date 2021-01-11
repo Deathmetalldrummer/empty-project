@@ -13,7 +13,9 @@ function generate() {
 		fs.appendFile(source+'_mounting.sass','\n@import "./'+arg+'/'+arg+'"',cb)
 
 		fs.mkdir(_dir, { recursive: true }, cb);
+		fs.mkdir(_dir + '/_image/', { recursive: true }, cb);
 
+		fs.writeFile(_dir + '/_image/.gitkeep','',cb);
 		fs.writeFile(_file + '.pug','',cb);
 		fs.writeFile(_file + '.sass','',cb);
 		fs.writeFile(_file + '.js','',cb);

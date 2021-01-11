@@ -25,7 +25,7 @@ const paths = {
 		src: [devel + '**/*.{sass,scss}', '!**/_*/**', '!**/_*'],
 		dest: build,
 		min: {
-			src: [build + '**/*.css', '!' + build + '**/*.min.css'],
+			src: [build + '**/*.css', '!**/*.min.css'],
 			dest: build
 		},
 	},
@@ -33,7 +33,7 @@ const paths = {
 		src: [devel + '**/*.js', '!**/_*/**', '!**/_*'],
 		dest: build,
 		min: {
-			src: [build + '**/*.js', '!' + build + '**/*.min.js'],
+			src: [build + '**/*.js', '!**/*.min.js'],
 			dest: build
 		},
 		libs: {
@@ -42,20 +42,21 @@ const paths = {
 				'./node_modules/slick-carousel/slick/slick.min.js',
 				'./node_modules/jquery-validation/dist/jquery.validate.min.js',
 			],
+			dest: build + 'assets/libs/',
 			min: false,
 			single: true
 		}
 	},
 	img: {
-		src: devel + '**/_pictures/**/*.{png,jpg,svg}',
-		dest: build
+		src: devel + '**/_image/**/*.{png,jpg,svg}',
+		dest: build + 'assets/image/'
 	},
 	font: {
-		src: devel + '**/*.{woff,woff2,ttf}',
-		dest: build
+		src: devel + '_common/_fonts/**/*.{woff,woff2,ttf}',
+		dest: build + 'assets/fonts/'
 	},
 	other: {
-		src: [devel + '**/*.{json}', '!**/_*/**', '!**/_*'],
+		src: [devel + '**/*', '!**/_*/**', '!**/_*', '!**/*.{js,pug,jade,sass,scss}'],
 		dest: build
 	},
 	watch: {
@@ -64,7 +65,7 @@ const paths = {
 		js: devel + '**/*.js',
 		font: devel + '**/*.{woff,woff2,ttf}',
 		img: devel + '**/*.{png,jpg,svg}',
-		other: devel + '**/*.{json}',
+		other: [devel + '**/*', '!**/*.{pug,jade,sass,scss,js}', '!**/_*/**', '!**/_*'],
 		build: build + '**/*.{html,css,js}'
 	}
 
@@ -198,7 +199,7 @@ function js_libs() {
 	}
 
 	return stream
-		.pipe(dest(paths.js.dest + 'libs/'));
+		.pipe(dest(paths.js.libs.dest));
 }
 
 
@@ -207,16 +208,13 @@ function js_libs() {
 ///////////////////////////////////////////////////////////////////////////////////////
 function copy_font() {
 	return src(paths.font.src)
-		.on('data',function(file){
-			replacePath(file,'_fonts/','fonts/');
-		})
 		.pipe(dest(paths.font.dest))
 }
 
 function copy_img() {
 	return src(paths.img.src)
 		.on('data', function(file) {
-			replacePath(file,'_pictures/','pictures/');
+			replaceImagePath(file,'_image/','');
 		})
 		.pipe(dest(paths.img.dest))
 }
@@ -226,12 +224,19 @@ function copy_other() {
 		.pipe(dest(paths.other.dest))
 }
 
-function replacePath(file,str,strTo) {
+function replaceImagePath(file,str,strTo) {
 	const filePath = file.path.replace(/\\/g,'/');
 	const picIndex = filePath.indexOf(str);
 	const develIndex = filePath.indexOf(devel);
 	const fromTo = filePath.slice(develIndex+devel.length,picIndex+str.length);
-	file.path = filePath.replace(fromTo,strTo);
+
+	const parent = fromTo.replace(str, '');
+	const parentToIndex = parent.lastIndexOf('/');
+	const parentFromIndex = parent.lastIndexOf('/', parentToIndex - 1) + 1;
+	let getParent = parent.slice(parentFromIndex, parentToIndex) + '/';
+	getParent = getParent[0] === '_' ? getParent.slice(1) : getParent;
+
+	file.path = filePath.replace(fromTo,strTo + getParent);
 }
 
 
