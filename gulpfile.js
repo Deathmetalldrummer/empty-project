@@ -36,6 +36,15 @@ const paths = {
 			src: [build + '**/*.js', '!' + build + '**/*.min.js'],
 			dest: build
 		},
+		libs: {
+			src: [
+				'./node_modules/jquery/dist/jquery.min.js',
+				'./node_modules/slick-carousel/slick/slick.min.js',
+				'./node_modules/jquery-validation/dist/jquery.validate.min.js',
+			],
+			min: false,
+			single: true
+		}
 	},
 	img: {
 		src: devel + '**/_pictures/**/*.{png,jpg,svg}',
@@ -68,20 +77,20 @@ const prefix = {
 
 
 function includeJS(file) {
-	var slash_path = file.path.replace(/\\/g, '/');
-	var file_path = slash_path.slice(slash_path.indexOf(devel), slash_path.length);
+	const slash_path = file.path.replace(/\\/g, '/');
+	const file_path = slash_path.slice(slash_path.indexOf(devel), slash_path.length);
 
-	var str_from = '//#include("';
-	var str_to = '");';
+	const str_from = '//#include("';
+	const str_to = '");';
 
 	file.contents = Buffer.from(result_string(absolute_file(file_path)));
 }
 
 function result_string(string) {
-	var str_from = '//#include("';
-	var str_to = '");';
-	var arr = find_path(string);
-	for (var i = 0; i < arr.length; i++) {
+	const str_from = '//#include("';
+	const str_to = '");';
+	const arr = find_path(string);
+	for (let i = 0; i < arr.length; i++) {
 		string = string.replace(str_from + arr[i] + str_to, absolute_file(arr[i]));
 	}
 
@@ -91,16 +100,16 @@ function result_string(string) {
 }
 
 function find_path(string) {
-	var str_from = '//#include("';
-	var str_to = '");';
-	var arr = [];
+	const str_from = '//#include("';
+	const str_to = '");';
+	const arr = [];
 
 	if (string.indexOf(str_from) !== -1) getPath(str_from, str_to, 0);
 
 	function getPath(from, to, search) {
-		var substr_from = string.indexOf(from, search) + from.length;
-		var substr_to = string.indexOf(to, substr_from);
-		var res = string.slice(substr_from, substr_to);
+		const substr_from = string.indexOf(from, search) + from.length;
+		const substr_to = string.indexOf(to, substr_from);
+		const res = string.slice(substr_from, substr_to);
 		arr.push(res);
 		if (string.indexOf(from, substr_to) !== -1) {
 			getPath(from, to, substr_to);
@@ -110,9 +119,9 @@ function find_path(string) {
 }
 
 function absolute_file(some_path) {
-	var str_from = '//#include("';
-	var parent_folder = some_path.replace(some_path.slice(some_path.lastIndexOf('/') + 1, some_path.length), '').replace(devel, '');
-	var file_content = fs_.readFileSync(some_path, 'utf8');
+	const str_from = '//#include("';
+	const parent_folder = some_path.replace(some_path.slice(some_path.lastIndexOf('/') + 1, some_path.length), '').replace(devel, '');
+	let file_content = fs_.readFileSync(some_path, 'utf8');
 	file_content = file_content.replace(/\/\/#include\("/g, str_from + devel + parent_folder);
 	return file_content;
 }
@@ -171,6 +180,27 @@ function js_min() {
 		.pipe(dest(paths.js.min.dest))
 }
 
+function js_libs() {
+	let stream = src(paths.js.libs.src)
+		.pipe(plumber_());
+
+	if (paths.js.libs.single) {
+		stream = stream
+			.pipe(concat_('libs.js'))
+	}
+
+	if (paths.js.libs.min) {
+		stream = stream
+			.pipe(uglify_())
+			.pipe(rename_({
+				suffix: '.min'
+			}))
+	}
+
+	return stream
+		.pipe(dest(paths.js.dest + 'libs/'));
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////////
 //                                                              COPY
@@ -197,10 +227,10 @@ function copy_other() {
 }
 
 function replacePath(file,str,strTo) {
-	var filePath = file.path.replace(/\\/g,'/');
-	var picIndex = filePath.indexOf(str);
-	var develIndex = filePath.indexOf(devel);
-	var fromTo = filePath.slice(develIndex+devel.length,picIndex+str.length);
+	const filePath = file.path.replace(/\\/g,'/');
+	const picIndex = filePath.indexOf(str);
+	const develIndex = filePath.indexOf(devel);
+	const fromTo = filePath.slice(develIndex+devel.length,picIndex+str.length);
 	file.path = filePath.replace(fromTo,strTo);
 }
 
@@ -209,7 +239,7 @@ function replacePath(file,str,strTo) {
 //                                                              CLEAN
 ///////////////////////////////////////////////////////////////////////////////////////
 async function clean() {
-	del_(build);
+	await del_(build);
 }
 
 
@@ -247,7 +277,7 @@ function watching() {
 
 const _pug = exports.pug = pug;
 const _sass = exports.sass = series(sass, css_min);
-const _js = exports.js = series(js, js_min);
+const _js = exports.js = series(js, js_min, js_libs);
 const _copy = exports.copy = parallel(copy_font, copy_img, copy_other);
 const _clean = exports.clean = clean;
 
