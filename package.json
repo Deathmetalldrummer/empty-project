@@ -28,7 +28,7 @@
 	},
 	"repository": "https://github.com/Deathmetalldrummer/Archetype.git",
 	"dependencies": {
-		"jquery": "^3.5.1",
+		"jquery": "^3.5.0",
 		"jquery-validation": "^1.19.3",
 		"slick-carousel": "^1.8.1"
 	}
