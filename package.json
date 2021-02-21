@@ -11,7 +11,7 @@
 	"author": "DeathMetallDrummer@gmail.com",
 	"license": "ISC",
 	"devDependencies": {
-		"browser-sync": "^2.26.7",
+		"browser-sync": "^2.26.14",
 		"del": "^5.0.0",
 		"gulp": "^4.0.2",
 		"gulp-autoprefixer": "^6.1.0",
@@ -23,12 +23,12 @@
 		"gulp-rename": "^1.4.0",
 		"gulp-sass": "^4.0.2",
 		"gulp-uglify": "^3.0.2",
-		"node-sass": "^4.12.0",
+		"node-sass": "^4.14.1",
 		"yarn": "^1.17.3"
 	},
 	"repository": "https://github.com/Deathmetalldrummer/Archetype.git",
 	"dependencies": {
-		"jquery": "^3.4.1",
+		"jquery": "^3.5.1",
 		"jquery-validation": "^1.19.3",
 		"slick-carousel": "^1.8.1"
 	}
